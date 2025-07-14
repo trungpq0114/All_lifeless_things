@@ -1,0 +1,57 @@
+<style>
+  /* font */
+  @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+  *, *::before, *::after {
+      font-family: 'Roboto', sans-serif;
+  };
+  .block-container {
+      padding-top: 1em;
+      padding-bottom: 1em;
+      padding-left: 1em;
+      padding-right: 1em;
+      margin: 0em;
+  }
+  [data-testid="stSidebarNav"] {
+      background-image: url(https://lh3.googleusercontent.com/fife/ALs6j_GjbKey6C1hffEr0DKfZlj5b4gnGZmIjGgHd8QYnxwVqZ0qVTpQEpQ0gzLgF7USJIeMs9spyjVm-1g6-lXcqru1EZU5egz8ZxPkiBc8ZHcJVx781m3UD_9qZZPA4ajiROFfe-pzz-LyYJMimHf61O5RHAuZV-d1x0zTZgunSgccHDqUy2FGzqD__7h8DPVxiKrAhwlBqjkxtC4o36SuwYS9324frfSQuAcdec-q7Xxj2ugJyQGGDrHEut984Ja6gY7wxF1kW2PTaUkt8n4yc7dRXcCQielEBEZbWMRhM1Kh37Vhm9uqfdAEw0cxILJ1hI1pH0kAZRdRSWgTwYp8tqE3Jg39RReLq2JsxBBS186vWtXHVD5zbQtrxPCZfHx_An-mq9H9FOTGnjc0ECDCU6wpt7utp21_zFN1-QWI5kjSgXRXhocHvkd0EAlNW1DCXZsg_HSVBmetk8F1ktvmFXgJ8-9l4p7RSFLRL65rAjAsLe59kYs3eXxcuwFT5I3PyrWy0YAI3vO_NB7FzvLImnGpoNCGSE6aTlq72EuDS5FDO0CZ_gOaGZjSnVWYo3gLwgO7ilGKXnzeIrrvGw89S1yRYTuik0HvqrT4AVOym7U1QYbcjPlZFAv3l1bi60SBlWRdRLV0lUdl-QPE-kUC-rd1kijRwkX035kd8k53Oh4h2HZ-ylZLSFB9OmeBRkaqaZXQ-k-w01pvYe-fcWH3xzY69DlMocrObvTyz2UFdxeYCAXTN89XVnuwtX7hOibFyk82QgTzaVDMyLV3lMYmpA5gSp_92mtnPz7Sx92DLm0YO5zoyKSAMqrQxTur8f1MdGItjtCQFH8QvXQM5-mm0vjKq51ZHiDok2fPA19oPNUc1Gf32sJxt71PPQdNv3vJbGSlUlxu1pmgeSeGgFvCuO3siUPL4vaImONi3sDbv6W7xis3nHGy8LPdolKzWxWDxLii9-dF4YyOawHK8ipOFYaxK9IRw-DvN2w7wM5WKIap9a50ZBeeBUdViJgt90-RWkPM_taUakL-IM1oi6k0S8iFdPCWllqdVghoP2fhc1IZoe-6GOPe_0GOW5GMxHSU9yJBFe2HX9lPLd5AuLRXIck8MQ_7AOwgZwaGpqnYF5id3jerG2u70jvFrg92xyHiXva0mPk9ZmjNBgCHsA_5yk-OgD3Fpyydd9zl8vrwJ_SVJv5DMUuxEHDH_96TKMWL6m-Xow2ZuBFyZYFiiiZN-3VP7LT4wCMf4lSX1fUxu0hVw1Khkq_kbBJJdbo5ehvQB9qHon_r1jNEsm902DXuURZXmxioU5javlMa7vIvwwkdS7vzgwZJ2T9psJsCi9ThKE9gwgDmDjpsUzXgfMAhshzW9F2juAgnCcwyj4CVJ_Sk2UW5bmgfP-tB_fIv_Ij2ZsiieyB7bicxlRMNrS6P-R66BC7oMVALqxpEdw7NB0YLZZQfF9PhB2UQKDZSZSGKZhjP9VaFdoQDnZs3ERwY0m5RfYvJTQopZ2juYSDbJH3vxPHAXvpmeIc36A1C_ckLtsIi4J4YRPwgLVgClMya7Vyn48fUVFwKiceC5DvOIREvieuWi2zeKzqbFu1aDn8U-Qah4iDO5Sx2Hb9_tA=w1920-h919);
+      background-repeat: no-repeat;
+      background-position-x: center;
+      background-position-y: 10px;
+      background-size: 80px 80px;
+  };
+  [data-testid="stForm"] {
+      background: #42275a;  /* fallback for old browsers */
+      background: -webkit-linear-gradient(to right, #734b6d, #42275a);  /* Chrome 10-25, Safari 5.1-6 */
+      background: linear-gradient(to right, #734b6d, #42275a); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+  };  
+                  
+  [data-testid="data-grid-canvas"] {
+      background-color: red;
+  }; 
+              
+  div[data-testid="stVerticalBlock"]:has(> div > .stHtml > .column_indicator) {
+      align-items: center
+  }
+              
+  /* Adapted from https://startbootstrap.com/theme/sb-admin-2 */
+  div[data-testid="stMetric"] {
+      background-color: #1a73e8;
+      padding: 0.1em 1em;
+      border-radius: 15px;
+      margin: 0 auto;
+      max-width: 200px;
+      min-height: 80px;
+  }
+  label[data-testid="stMetricLabel"] p {
+      font-size: 1em;
+      justify-content: center;
+  }
+  div[data-testid="stMetricValue"] {
+      font-size: 1.3em;
+      font-weight: 300;
+      text-align: center;
+      /* color: #174C4F; */
+  }
+  div[data-testid="stHorizontalBlock"] {
+  }
+</style>
