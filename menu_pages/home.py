@@ -7,13 +7,45 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.graph_objects as go
+import mysql.connector
+from streamlit_echarts import st_echarts
+import json
 
+st.set_page_config(layout='wide')
+st.cache_resource.clear()
+
+def get_commit_activity():
+    conn = mysql.connector.connect(
+        host=st.secrets["database_web_account"]["host"],
+        user=st.secrets["database_web_account"]["username"],
+        password=st.secrets["database_web_account"]["password"],
+        database=st.secrets["database_web_account"]["database"]
+    )
+    query = """
+        SELECT repo_name, week, total, day_0, day_1, day_2, day_3, day_4, day_5, day_6
+        FROM commit_activity
+    """
+    df = pd.read_sql(query, conn)
+    conn.close()
+    return df
+
+
+def prepare_heatmap_data(df, repo=None):
+    if repo:
+        df = df[df['repo_name'] == repo]
+    # Chuyển week sang dạng datetime nếu muốn
+    df['week_dt'] = pd.to_datetime(df['week'], unit='s')
+    # Tạo dataframe cho heatmap
+    heatmap_data = df[['week_dt', 'day_0', 'day_1', 'day_2', 'day_3', 'day_4', 'day_5', 'day_6']]
+    heatmap_data = heatmap_data.set_index('week_dt')
+    heatmap_data.columns = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    return heatmap_data
 
 def show_home():
-    # Hai cột chính cho layout
+    # Layout hai cột chính cho toàn bộ nội dung bên dưới heatmap
     col_left, col_right = st.columns([3, 1])
     with col_left:
-        # Ảnh đại diện và thông tin cá nhân
+        # Thông tin cá nhân
         with st.container():
             col1, col2 = st.columns([1, 3])
             with col1:
@@ -28,8 +60,75 @@ def show_home():
                 <a href='https://www.linkedin.com/in/trungpham0114/'>LinkedIn</a> | <a href='https://github.com/trungpq0114'>GitHub</a></p>
                 """, unsafe_allow_html=True)
         st.markdown("---")
-
         # Học vấn
+        df = get_commit_activity()
+        # Chỉ lấy các repo có ít nhất 1 commit
+        repo_commit = df.groupby('repo_name')['total'].sum()
+        valid_repos = repo_commit[repo_commit > 0].index.tolist()
+        repo_options = ['Tất cả'] + valid_repos
+        repo = st.selectbox("Chọn repo", repo_options)
+        if repo == 'Tất cả':
+            df_repo = df[df['repo_name'].isin(valid_repos)].copy()
+        else:
+            df_repo = df[df['repo_name'] == repo].copy()
+        df_repo['week_dt'] = pd.to_datetime(df_repo['week'], unit='s')
+        df_repo['week_label'] = df_repo['week_dt'].dt.strftime('%Y-%U')
+        days = ['day_0', 'day_1', 'day_2', 'day_3', 'day_4', 'day_5', 'day_6']
+        week_day = df_repo.groupby('week_label')[days].sum().T
+        week_day.index = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+        # Tạo text cho tooltip
+        text = []
+        for i, day in enumerate(week_day.index):
+            row = []
+            for j, week in enumerate(week_day.columns):
+                row.append(f"Tuần: {week}<br>Ngày: {day}<br>Commits: {week_day.iloc[i, j]}")
+            text.append(row)
+        # Chuẩn bị dữ liệu cho ECharts heatmap
+        x_labels = list(week_day.columns)
+        y_labels = list(week_day.index)
+        data = []
+        for y_idx, y in enumerate(y_labels):
+            for x_idx, x in enumerate(x_labels):
+                value = int(week_day.loc[y, x])  # Đảm bảo là int
+                data.append([x_idx, y_idx, value])
+        # Tính toán chiều cao phù hợp để ô gần vuông
+        cell_size = 20  # px, bạn có thể điều chỉnh
+        chart_height = max(160, cell_size * len(y_labels))
+        option = {
+            "tooltip": {
+                "position": 'top'
+            },
+            "grid": {"show": True, "bottom": '12%',"top": '10%', "left": '10%', "right": '10%', "containLabel": False, "borderWidth": 5},
+            "xAxis": {
+                "type": 'category',
+                "data": x_labels,
+                "splitArea": {"show": True}
+            },
+            "yAxis": {
+                "type": 'category',
+                "data": y_labels,
+                "splitArea": {"show": True}
+            },
+            "visualMap": {
+                "show": False,
+                "min": int(week_day.values.min()),
+                "max": int(week_day.values.max()),
+                "calculable": True,
+                "color": ['#196127', '#239a3b', '#7bc96f', '#c6e48b', '#ebedf0']
+            },
+            "series": [{
+                "name": 'Commits',
+                "type": 'heatmap',
+                "data": data,
+                "label": {"show": False},
+                "emphasis": {"itemStyle": {"shadowBlur": 10, "shadowColor": 'rgba(0, 0, 0, 0.5)'}},
+                "itemStyle": {
+                    "borderColor": "#333",
+                    "borderWidth": 2
+                }
+            }]
+        }
+        st_echarts(option, height=f"{chart_height}px")
         st.markdown("## 🎓 Học vấn")
         st.markdown("""
         **Đại học Ngoại thương**  <br>
@@ -38,7 +137,6 @@ def show_home():
         Xếp loại: Bằng giỏi
         """, unsafe_allow_html=True)
         st.markdown("---")
-
         # Kinh nghiệm làm việc
         with st.expander("💼 Kinh nghiệm làm việc", expanded=True):
             st.markdown("""
@@ -59,8 +157,7 @@ def show_home():
             </div>
             """, unsafe_allow_html=True)
         st.markdown("---")
-
-        # Dự án tiêu biểu (làm nổi bật)
+        # Dự án tiêu biểu
         with st.container():
             st.markdown("## 🚀 Dự án tiêu biểu")
             st.markdown("""
@@ -90,22 +187,17 @@ def show_home():
             </div>
             """, unsafe_allow_html=True)
         st.markdown("---")
-
-        # --- Thống kê hoạt động cá nhân ---
+        # Thống kê hoạt động cá nhân
         st.markdown("## 📊 Thống kê hoạt động cá nhân")
-
-        # Bignumber highlight
         total_hours = 120 + 80 + 60 + 30
         num_projects = 4
         total_lines = 35000
         num_techs = 8
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Tổng giờ code", f"{total_hours}h")
-        col2.metric("Số dự án", f"{num_projects}")
-        col3.metric("Số dòng code", f"{total_lines:,}")
-        col4.metric("Công nghệ sử dụng", f"{num_techs}")
-
-        # Bar chart nằm ngang: số giờ code theo dự án (Plotly)
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Tổng giờ code", f"{total_hours}h")
+        c2.metric("Số dự án", f"{num_projects}")
+        c3.metric("Số dòng code", f"{total_lines:,}")
+        c4.metric("Công nghệ sử dụng", f"{num_techs}")
         project_hours = pd.DataFrame({
             'Dự án': ['Dự đoán tín dụng', 'Phân tích cảm xúc', 'Dashboard kinh doanh', 'Khác'],
             'Giờ code': [120, 80, 60, 30]
@@ -123,17 +215,13 @@ def show_home():
             margin=dict(l=10, r=10, t=30, b=10)
         )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-
-        # Hiệu ứng nhẹ: animation emoji
         st.markdown("<div style='text-align:center;font-size:30px;margin-top:30px;'>✨ <span style='animation: blinker 1s linear infinite;'>Cảm ơn bạn đã ghé thăm CV!</span> ✨</div>", unsafe_allow_html=True)
         st.markdown("""
         <style>
         @keyframes blinker { 50% { opacity: 0.2; } }
         </style>
         """, unsafe_allow_html=True)
-
     with col_right:
-        # Kỹ năng chính
         st.markdown("## 🛠️ Kỹ năng chính")
         st.markdown("""
         - Excel, SQL, Power BI
@@ -143,14 +231,12 @@ def show_home():
         - Dashboard, Report Automation
         """)
         st.markdown("---")
-        # Ngôn ngữ
         st.markdown("## 🌐 Ngôn ngữ")
         st.markdown("""
         **Tiếng Anh**  <br>
         TOEIC 690
         """, unsafe_allow_html=True)
         st.markdown("---")
-        # Sở thích với icon và layout
         st.markdown("## 🎯 Sở thích")
         hobby_cols = st.columns(1)
         hobbies = [
@@ -163,4 +249,3 @@ def show_home():
             st.markdown(f"<div style='font-size:40px'>{icon}</div>", unsafe_allow_html=True)
             st.markdown(f"<div style='text-align:left'>{hobby}</div>", unsafe_allow_html=True)
         st.markdown("---")
-    

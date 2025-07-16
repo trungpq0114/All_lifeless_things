@@ -7,9 +7,9 @@ import importlib
 st.cache_resource.clear()
 
 page_dict = {
-    "Home": ("pages.home", "show_home"),
-    "Settings": ("pages.settings", "show_settings"),
-    "Account": ("pages.account", "show_account"),
+    "Home": ("menu_pages.home", "show_home"),
+    "Settings": ("menu_pages.settings", "show_settings"),
+    "Account": ("menu_pages.account", "show_account"),
 }
 
 with st.sidebar:
