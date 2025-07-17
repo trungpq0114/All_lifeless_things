@@ -5,10 +5,8 @@ import plotly.graph_objects as go
 from streamlit_echarts import st_echarts
 from functions.dataset import get_commit_activity, get_airflow_stats, get_airflow_dagrun
 
-st.set_page_config(layout='wide')
-st.cache_resource.clear()
-
 def show_home():
+    st.set_page_config(layout='wide')
     # Layout hai cột chính cho toàn bộ nội dung bên dưới heatmap
     col_left, col_right = st.columns([3, 1])
     with col_left:
@@ -134,7 +132,7 @@ def show_home():
                 "min": int(week_day.values.min()),
                 "max": int(week_day.values.max()),
                 "calculable": True,
-                "color": ['#196127', '#239a3b', '#7bc96f', '#c6e48b', '#ebedf0']
+                "color": ["#232877", "#2A3C96", "#364DAA", "#6786E9", '#F1F5FF']
             },
             "series": [{
                 "name": 'Commits',
@@ -184,6 +182,9 @@ def show_home():
             <li><b>Kết quả:</b> Hỗ trợ team MKT ra quyết định nhanh hơn, số liệu chính xác hơn, giảm bớt được 80% nhân viên kế toán tổng hợp với chi phí vận hành thấp.</li>
             </ul>
             </div>
+            """, unsafe_allow_html=True)
+            # Hệ thống ETL + thống kê Airflow 7 ngày gần nhất
+            st.markdown("""
             <div style='border:1px solid #eee; border-radius:8px; padding:16px; margin-bottom:16px;'>
             <h4>Hệ thống ETL</h4>
             <ul>
@@ -191,7 +192,37 @@ def show_home():
             <li><b>Công nghệ:</b> Python, Airflow, DBT, Mysql</li>
             <li><b>Kết quả:</b> Tự động hóa 100% các công việc đồng bộ đơn hàng. Cập nhật dữ liệu mới nhất mỗi 5 phút.</li>
             </ul>
+            <div style='margin-top:16px;'><b>Thống kê Airflow 7 ngày gần nhất:</b></div>
+            """, unsafe_allow_html=True)
+            stats = get_airflow_stats()
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Số DAG đã chạy", f"{stats['num_dags']}")
+            c2.metric("Số DAG run", f"{stats['num_runs']}")
+            c3.metric("Số lượng DAG lỗi", f"{stats['num_failed']}")
+            avg_min = round(stats['avg_duration']/60, 2) if stats['avg_duration'] else 0
+            c4.metric("Thời gian chạy 1 DAG TB", f"{avg_min} phút")
+            df_dag = get_airflow_dagrun()
+            dag_median = df_dag.groupby('dag_id')['duration'].median().sort_values(ascending=True)
+            fig = go.Figure(go.Bar(
+                y=dag_median.index,
+                x=dag_median.values / 60,  # chuyển sang phút
+                orientation='h',
+                marker_color='#636EFA',
+                text=[f"{v/60:.2f}" for v in dag_median.values],
+                textposition='outside',
+            ))
+            fig.update_layout(
+                yaxis_title='DAG',
+                xaxis_title='',
+                xaxis=dict(showticklabels=False, visible=False),
+                height=350,
+                margin=dict(l=10, r=10, t=30, b=10),
+            )
+            st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+            st.markdown("""
             </div>
+            """, unsafe_allow_html=True)
+            st.markdown("""
             <div style='border:1px solid #eee; border-radius:8px; padding:16px; margin-bottom:16px;'>
             <h4>Webapp cá nhân hóa</h4>
             <ul>
@@ -201,31 +232,3 @@ def show_home():
             </ul>
             </div>
             """, unsafe_allow_html=True)
-        st.markdown("---")
-        # Thống kê hoạt động cá nhân
-        # Thống kê hoạt động cá nhân từ Airflow
-        st.markdown("### 📊 Thống kê Airflow 7 ngày gần nhất")
-        stats = get_airflow_stats()
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Số DAG đã chạy", f"{stats['num_dags']}")
-        c2.metric("Số DAG run", f"{stats['num_runs']}")
-        c3.metric("Số lượng DAG lỗi", f"{stats['num_failed']}")
-        avg_min = round(stats['avg_duration']/60, 2) if stats['avg_duration'] else 0
-        c4.metric("Thời gian chạy 1 DAG TB", f"{avg_min} phút")
-
-        df_dag = get_airflow_dagrun()
-        # Tính trung vị cho từng DAG
-        dag_median = df_dag.groupby('dag_id')['duration'].median().sort_values(ascending=False)
-
-        fig = go.Figure(go.Bar(
-            x=dag_median.index,
-            y=dag_median.values / 60,  # chuyển sang phút
-            marker_color='#636EFA'
-        ))
-        fig.update_layout(
-            xaxis_title='DAG',
-            yaxis_title='Thời gian chạy trung vị (phút)',
-            height=350,
-            margin=dict(l=10, r=10, t=30, b=10),
-        )
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})

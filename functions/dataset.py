@@ -11,9 +11,11 @@ def get_commit_activity():
         password=st.secrets["database_web_account"]["password"],
         database=st.secrets["database_web_account"]["database"]
     )
-    query = """
+    one_year_ago = int((datetime.datetime.now() - datetime.timedelta(days=365)).timestamp())
+    query = f"""
         SELECT repo_name, week, total, day_0, day_1, day_2, day_3, day_4, day_5, day_6
         FROM commit_activity
+        WHERE week >= {one_year_ago}
     """
     df = pd.read_sql(query, conn)
     conn.close()

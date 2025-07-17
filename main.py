@@ -7,21 +7,23 @@ import importlib
 st.cache_resource.clear()
 
 page_dict = {
-    "Home": ("menu_pages.home", "show_home"),
-    "Settings": ("menu_pages.settings", "show_settings"),
-    "Account": ("menu_pages.account", "show_account"),
+    "Home": {"module": "menu_pages.home", "func": "show_home", "icon": "house"},
+    "Dashboard": {"module": "menu_pages.dashboard", "func": "show_dashboard", "icon": "bar-chart"},
+    "Settings": {"module": "menu_pages.settings", "func": "show_settings", "icon": "gear"},
+    "Account": {"module": "menu_pages.account", "func": "show_account", "icon": "person"},
 }
 
 with st.sidebar:
     selected = option_menu(
-        "Hello", 
-        list(page_dict.keys()), 
-        icons=['house', 'gear', 'person'], 
-        menu_icon="cast", 
+        "Hello",
+        list(page_dict.keys()),
+        icons=[page_dict[k]["icon"] for k in page_dict],
+        menu_icon="cast",
         default_index=0
     )
 
-module_name, func_name = page_dict[selected]
+module_name = page_dict[selected]["module"]
+func_name = page_dict[selected]["func"]
 module = importlib.import_module(module_name)
 
 if selected == "Home":
