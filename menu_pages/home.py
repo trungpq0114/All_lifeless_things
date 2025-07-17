@@ -1,45 +1,12 @@
 import streamlit as st
-import streamlit_authenticator as stauth
 from page_setup import *
-from PIL import Image
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 import plotly.graph_objects as go
-import mysql.connector
 from streamlit_echarts import st_echarts
-import json
+from functions.dataset import get_commit_activity, get_airflow_stats, get_airflow_dagrun
 
 st.set_page_config(layout='wide')
 st.cache_resource.clear()
-
-def get_commit_activity():
-    conn = mysql.connector.connect(
-        host=st.secrets["database_web_account"]["host"],
-        user=st.secrets["database_web_account"]["username"],
-        password=st.secrets["database_web_account"]["password"],
-        database=st.secrets["database_web_account"]["database"]
-    )
-    query = """
-        SELECT repo_name, week, total, day_0, day_1, day_2, day_3, day_4, day_5, day_6
-        FROM commit_activity
-    """
-    df = pd.read_sql(query, conn)
-    conn.close()
-    return df
-
-
-def prepare_heatmap_data(df, repo=None):
-    if repo:
-        df = df[df['repo_name'] == repo]
-    # Chuyển week sang dạng datetime nếu muốn
-    df['week_dt'] = pd.to_datetime(df['week'], unit='s')
-    # Tạo dataframe cho heatmap
-    heatmap_data = df[['week_dt', 'day_0', 'day_1', 'day_2', 'day_3', 'day_4', 'day_5', 'day_6']]
-    heatmap_data = heatmap_data.set_index('week_dt')
-    heatmap_data.columns = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    return heatmap_data
 
 def show_home():
     # Layout hai cột chính cho toàn bộ nội dung bên dưới heatmap
@@ -59,14 +26,67 @@ def show_home():
                 ☎️ 0123 456 789  <br>
                 <a href='https://www.linkedin.com/in/trungpham0114/'>LinkedIn</a> | <a href='https://github.com/trungpq0114'>GitHub</a></p>
                 """, unsafe_allow_html=True)
+    with col_right:
+        st.markdown("## 🛠️ Kỹ năng chính")
+        st.markdown("""
+        - Excel, GG sheet, SQL
+        - Python, Mysql, ETL
+        - Data Visualization
+        - Business Analysis
+        - AI Agent
+        - Datamart
+        """)
         st.markdown("---")
-        # Học vấn
+        st.markdown("## 🎓 Học vấn")
+        st.markdown("""
+        **Đại học Ngoại thương**  <br>
+        Khoa Kinh tế Quốc tế  <br>
+        Xếp loại: Bằng giỏi
+        """, unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("## 🌐 Ngôn ngữ")
+        st.markdown("""
+        **Tiếng Anh**  <br>
+        TOEIC 690
+        """, unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("## 🎯 Sở thích")
+        hobbies = [
+            ("📚", "Đọc sách"),
+            ("🏃", "Chạy bộ"),
+            ("🌏", "Du lịch"),
+            ("📷", "Chụp ảnh")
+        ]
+        cols = st.columns(2)
+        for idx, (icon, hobby) in enumerate(hobbies):
+            with cols[idx % 2]:
+                st.markdown(
+                    f"""
+                    <div style='display:flex; align-items:center; margin-bottom:12px;'>
+                        <span style='font-size:32px; margin-right:10px;'>{icon}</span>
+                        <span style='font-size:18px;'>{hobby}</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+    with col_left:
+        st.markdown("---")
         df = get_commit_activity()
         # Chỉ lấy các repo có ít nhất 1 commit
         repo_commit = df.groupby('repo_name')['total'].sum()
         valid_repos = repo_commit[repo_commit > 0].index.tolist()
         repo_options = ['Tất cả'] + valid_repos
-        repo = st.selectbox("Chọn repo", repo_options)
+        repo_descriptions = {
+            "Tất cả": "Thực ra số commit nhiều hơn thế này :D mà mình chưa check được sao API Github trả về ít vậy.",
+            "repo1": "Mô tả repo 1",
+            "repo2": "Mô tả repo 2",
+            # Thêm các repo khác ở đây
+        }
+
+        col_repo, col_main = st.columns([2, 10])
+        with col_repo:
+            repo = st.selectbox("Repositories", repo_options)
+            st.caption(repo_descriptions.get(repo, "Không có mô tả cho repo này."))
         if repo == 'Tất cả':
             df_repo = df[df['repo_name'].isin(valid_repos)].copy()
         else:
@@ -98,7 +118,7 @@ def show_home():
             "tooltip": {
                 "position": 'top'
             },
-            "grid": {"show": True, "bottom": '12%',"top": '10%', "left": '10%', "right": '10%', "containLabel": False, "borderWidth": 5},
+            "grid": {"show": True, "bottom": '12%',"top": '10%', "left": '10%', "right": '1%', "containLabel": False, "borderWidth": 5},
             "xAxis": {
                 "type": 'category',
                 "data": x_labels,
@@ -128,14 +148,9 @@ def show_home():
                 }
             }]
         }
-        st_echarts(option, height=f"{chart_height}px")
-        st.markdown("## 🎓 Học vấn")
-        st.markdown("""
-        **Đại học Ngoại thương**  <br>
-        Khoa Kinh tế quốc tế  <br>
-        GPA: 3.2/4.0  <br>
-        Xếp loại: Bằng giỏi
-        """, unsafe_allow_html=True)
+        with col_main:
+            st_echarts(option, height=f"{chart_height}px")
+
         st.markdown("---")
         # Kinh nghiệm làm việc
         with st.expander("💼 Kinh nghiệm làm việc", expanded=True):
@@ -162,90 +177,55 @@ def show_home():
             st.markdown("## 🚀 Dự án tiêu biểu")
             st.markdown("""
             <div style='border:1px solid #eee; border-radius:8px; padding:16px; margin-bottom:16px;'>
-            <h4>Hệ thống dự đoán rủi ro tín dụng</h4>
+            <h4>Hệ thống dashboard cho công ty Ecom</h4>
             <ul>
-            <li><b>Mô tả:</b> Xây dựng hệ thống machine learning dự đoán khả năng vỡ nợ của khách hàng dựa trên dữ liệu lịch sử tín dụng.</li>
-            <li><b>Công nghệ:</b> Python, scikit-learn, pandas, SQL, Streamlit</li>
-            <li><b>Kết quả:</b> Giảm 20% tỷ lệ nợ xấu, hỗ trợ ra quyết định tín dụng nhanh hơn.</li>
+            <li><b>Mô tả:</b> Xây dựng hệ thống Dashboard doanh thu, chi phí, tồn kho cho công ty với các tính năng cơ bản gồm phân quyền theo tài khoản, chi nhánh, team.</li>
+            <li><b>Công nghệ:</b> Python, Pandas, SQL, Streamlit</li>
+            <li><b>Kết quả:</b> Hỗ trợ team MKT ra quyết định nhanh hơn, số liệu chính xác hơn, giảm bớt được 80% nhân viên kế toán tổng hợp với chi phí vận hành thấp.</li>
             </ul>
             </div>
             <div style='border:1px solid #eee; border-radius:8px; padding:16px; margin-bottom:16px;'>
-            <h4>Phân tích cảm xúc mạng xã hội</h4>
+            <h4>Hệ thống ETL</h4>
             <ul>
-            <li><b>Mô tả:</b> Thu thập và phân tích dữ liệu Twitter để nhận diện xu hướng dư luận về sản phẩm mới.</li>
-            <li><b>Công nghệ:</b> Python, tweepy, nltk, matplotlib</li>
-            <li><b>Kết quả:</b> Cung cấp báo cáo realtime cho phòng marketing, giúp điều chỉnh chiến lược truyền thông.</li>
+            <li><b>Mô tả:</b> Hệ thống ETL đồng bộ đơn hàng tự các nền tảng POS Pancake, Facebook Ads, Tiktok Ads.</li>
+            <li><b>Công nghệ:</b> Python, Airflow, DBT, Mysql</li>
+            <li><b>Kết quả:</b> Tự động hóa 100% các công việc đồng bộ đơn hàng. Cập nhật dữ liệu mới nhất mỗi 5 phút.</li>
             </ul>
             </div>
             <div style='border:1px solid #eee; border-radius:8px; padding:16px; margin-bottom:16px;'>
-            <h4>Dashboard phân tích kinh doanh</h4>
+            <h4>Webapp cá nhân hóa</h4>
             <ul>
-            <li><b>Mô tả:</b> Thiết kế dashboard trực quan hóa dữ liệu bán hàng, tồn kho, lợi nhuận cho ban lãnh đạo.</li>
-            <li><b>Công nghệ:</b> Power BI, SQL, Excel</li>
-            <li><b>Kết quả:</b> Giúp lãnh đạo nắm bắt nhanh hiệu quả kinh doanh, ra quyết định kịp thời.</li>
+            <li><b>Mô tả:</b> Blog cá nhân deploy trên Server cá nhân, theo dõi kết quả công việc.</li>
+            <li><b>Công nghệ:</b> Python, Service, Ngrok</li>
+            <li><b>Kết quả:</b> Lưu profile cá nhân và theo dõi các dashboard cá nhân (Github, số lượng DAG, ...).</li>
             </ul>
             </div>
             """, unsafe_allow_html=True)
         st.markdown("---")
         # Thống kê hoạt động cá nhân
-        st.markdown("## 📊 Thống kê hoạt động cá nhân")
-        total_hours = 120 + 80 + 60 + 30
-        num_projects = 4
-        total_lines = 35000
-        num_techs = 8
+        # Thống kê hoạt động cá nhân từ Airflow
+        st.markdown("### 📊 Thống kê Airflow 7 ngày gần nhất")
+        stats = get_airflow_stats()
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Tổng giờ code", f"{total_hours}h")
-        c2.metric("Số dự án", f"{num_projects}")
-        c3.metric("Số dòng code", f"{total_lines:,}")
-        c4.metric("Công nghệ sử dụng", f"{num_techs}")
-        project_hours = pd.DataFrame({
-            'Dự án': ['Dự đoán tín dụng', 'Phân tích cảm xúc', 'Dashboard kinh doanh', 'Khác'],
-            'Giờ code': [120, 80, 60, 30]
-        })
+        c1.metric("Số DAG đã chạy", f"{stats['num_dags']}")
+        c2.metric("Số DAG run", f"{stats['num_runs']}")
+        c3.metric("Số lượng DAG lỗi", f"{stats['num_failed']}")
+        avg_min = round(stats['avg_duration']/60, 2) if stats['avg_duration'] else 0
+        c4.metric("Thời gian chạy 1 DAG TB", f"{avg_min} phút")
+
+        df_dag = get_airflow_dagrun()
+        # Tính trung vị cho từng DAG
+        dag_median = df_dag.groupby('dag_id')['duration'].median().sort_values(ascending=False)
+
         fig = go.Figure(go.Bar(
-            x=project_hours['Giờ code'],
-            y=project_hours['Dự án'],
-            orientation='h',
-            marker_color=['#636EFA', '#EF553B', '#00CC96', '#AB63FA']
+            x=dag_median.index,
+            y=dag_median.values / 60,  # chuyển sang phút
+            marker_color='#636EFA'
         ))
         fig.update_layout(
-            xaxis_title='Giờ code',
-            yaxis_title='Dự án',
-            height=300,
-            margin=dict(l=10, r=10, t=30, b=10)
+            xaxis_title='DAG',
+            yaxis_title='Thời gian chạy trung vị (phút)',
+            height=350,
+            margin=dict(l=10, r=10, t=30, b=10),
         )
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-        st.markdown("<div style='text-align:center;font-size:30px;margin-top:30px;'>✨ <span style='animation: blinker 1s linear infinite;'>Cảm ơn bạn đã ghé thăm CV!</span> ✨</div>", unsafe_allow_html=True)
-        st.markdown("""
-        <style>
-        @keyframes blinker { 50% { opacity: 0.2; } }
-        </style>
-        """, unsafe_allow_html=True)
-    with col_right:
-        st.markdown("## 🛠️ Kỹ năng chính")
-        st.markdown("""
-        - Excel, SQL, Power BI
-        - Python
-        - Data Visualization
-        - Business Analysis
-        - Dashboard, Report Automation
-        """)
-        st.markdown("---")
-        st.markdown("## 🌐 Ngôn ngữ")
-        st.markdown("""
-        **Tiếng Anh**  <br>
-        TOEIC 690
-        """, unsafe_allow_html=True)
-        st.markdown("---")
-        st.markdown("## 🎯 Sở thích")
-        hobby_cols = st.columns(1)
-        hobbies = [
-            ("📚", "Đọc sách"),
-            ("🏃", "Chạy bộ"),
-            ("🌏", "Du lịch"),
-            ("📷", "Chụp ảnh")
-        ]
-        for icon, hobby in hobbies:
-            st.markdown(f"<div style='font-size:40px'>{icon}</div>", unsafe_allow_html=True)
-            st.markdown(f"<div style='text-align:left'>{hobby}</div>", unsafe_allow_html=True)
-        st.markdown("---")
