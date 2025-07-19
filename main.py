@@ -15,7 +15,7 @@ page_dict = {
 
 with st.sidebar:
     selected = option_menu(
-        "Hello",
+        "OllEh",
         list(page_dict.keys()),
         icons=[page_dict[k]["icon"] for k in page_dict],
         menu_icon="cast",

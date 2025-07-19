@@ -75,8 +75,9 @@ def show_home():
         valid_repos = repo_commit[repo_commit > 0].index.tolist()
         repo_options = ['Tất cả'] + valid_repos
         repo_descriptions = {
-            "Tất cả": "Thực ra số commit nhiều hơn thế này :D mà mình chưa check được sao API Github trả về ít vậy.",
-            "repo1": "Mô tả repo 1",
+            "Tất cả": "Ít quá :D mà mình chưa hiểu được sao API Github trả về ít vậy. Nhưng trên hết, mời bạn đến với Portfolio của mình!",
+            "All_lifeless_things": "Chính là dự án tạo ra trang web này, nơi mình lưu trữ các dự án và thông tin cá nhân."
+            "bạn có thể xem mã nguồn tại <a href='https://github.com/trungpq0114/All_lifeless_things'>đây</a>.",
             "repo2": "Mô tả repo 2",
             # Thêm các repo khác ở đây
         }
@@ -84,7 +85,7 @@ def show_home():
         col_repo, col_main = st.columns([2, 10])
         with col_repo:
             repo = st.selectbox("Repositories", repo_options)
-            st.caption(repo_descriptions.get(repo, "Không có mô tả cho repo này."))
+            st.markdown(repo_descriptions.get(repo, "Không có mô tả cho repo này."), unsafe_allow_html=True)
         if repo == 'Tất cả':
             df_repo = df[df['repo_name'].isin(valid_repos)].copy()
         else:
@@ -216,8 +217,20 @@ def show_home():
                 xaxis_title='',
                 xaxis=dict(showticklabels=False, visible=False),
                 height=350,
-                margin=dict(l=10, r=10, t=30, b=10),
+                margin=dict(l=10, r=10, t=10, b=10),  # giảm margin-top
             )
+            fig.update_traces(textfont_size=12, textangle=0, cliponaxis=False)
+            fig.update_yaxes(tickfont_size=12, title_font_size=14)
+            fig.update_xaxes(tickfont_size=12, title_font_size=14)
+            max_len = dag_median.index.str.len().max()
+            st.markdown(f"""
+                <div style='margin-bottom:5px; margin-left: {max_len*8}px; margin-top:0;'>
+                    <span style='font-size:26px; font-weight:700; color:#636EFA;'>Trung vị <b>thời gian chạy của DAG</b></span>
+                </div>
+                <div style='margin-bottom:0px; margin-left: {max_len*8}px; margin-top:-8px;'>
+                    <span style='font-size:16px; color:#ffffff;'>trên Airflow trong 7 ngày qua. (phút)</span>
+                </div>
+            """, unsafe_allow_html=True)
             st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
             st.markdown("""
             </div>

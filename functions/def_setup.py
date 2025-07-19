@@ -36,12 +36,12 @@ def setup_page():
     if st.session_state['authentication_status']:
         authenticator.logout("Đăng xuất", "sidebar")
         st.write(f'Welcome *{st.session_state["name"]}*')
-        st.title('Some content')
     elif st.session_state['authentication_status'] is False:
         st.error('Username/password is incorrect')
     elif st.session_state['authentication_status'] is None:
         st.warning('Please enter your username and password')
     return authenticator
+
 def get_date_info():
     import datetime
     today = datetime.datetime.today().date()
@@ -60,6 +60,8 @@ def get_date_info():
 
     date_dic = {}
     date_dic['today'] = today
+    date_dic['tomorrow'] = today + datetime.timedelta(days=1)
+    date_dic['three_days_ago'] = today - datetime.timedelta(days=3)
     date_dic['years'] = years
     date_dic['months'] = months
     date_dic['days'] = days
