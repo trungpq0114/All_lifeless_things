@@ -1,0 +1,27 @@
+name: Deploy Streamlit App
+
+on:
+  push:
+    branches:
+      - main    # chạy khi có push vào nhánh main
+
+jobs:
+  deploy:
+    name: CI/CD Streamlit App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}             # IP hoặc domain server
+          username: ${{ secrets.SERVER_USER }}         # tên user, ví dụ: ubuntu, ec2-user
+          key: ${{ secrets.SERVER_SSH_KEY }}           # private key đã lưu ở GitHub Secrets
+          port: 22
+          script: |
+            cd /root/streamlit_webapp/All_lifeless_things   # cập nhật đúng đường dẫn thư mục trên server
+            git pull origin main                          # kéo code mới từ GitHub
+            sudo systemctl restart streamlit_webapp.service # khởi động lại service Streamlit

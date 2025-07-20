@@ -12,9 +12,9 @@ def show_home():
     with col_left:
         # Thông tin cá nhân
         with st.container():
-            col1, col2 = st.columns([1, 3])
+            col1, col2 = st.columns([2, 7])
             with col1:
-                st.image('https://avatars.githubusercontent.com/u/84620703?s=400&u=1e3fc050834b12d4cbf23908b107d9ed4232c5d5&v=4', width=250)
+                st.image('https://avatars.githubusercontent.com/u/84620703?s=400&u=1e3fc050834b12d4cbf23908b107d9ed4232c5d5&v=4', width=230)
             with col2:
                 st.markdown("""
                 <h1 style='margin-bottom:0;'>Phạm Quang Trung</h1>
@@ -68,23 +68,22 @@ def show_home():
                     unsafe_allow_html=True
                 )
     with col_left:
-        st.markdown("---")
         df = get_commit_activity()
         # Chỉ lấy các repo có ít nhất 1 commit
         repo_commit = df.groupby('repo_name')['total'].sum()
         valid_repos = repo_commit[repo_commit > 0].index.tolist()
         repo_options = ['Tất cả'] + valid_repos
         repo_descriptions = {
-            "Tất cả": "Ít quá :D mà mình chưa hiểu được sao API Github trả về ít vậy. Nhưng trên hết, mời bạn đến với Portfolio của mình!",
+            "Tất cả": "Ít quá. Nhưng trên hết, mời bạn đến với Portfolio của mình!",
             "All_lifeless_things": "Chính là dự án tạo ra trang web này, nơi mình lưu trữ các dự án và thông tin cá nhân."
             "bạn có thể xem mã nguồn tại <a href='https://github.com/trungpq0114/All_lifeless_things'>đây</a>.",
             "repo2": "Mô tả repo 2",
             # Thêm các repo khác ở đây
         }
 
-        col_repo, col_main = st.columns([2, 10])
+        col_repo, col_main = st.columns([2, 13])
         with col_repo:
-            repo = st.selectbox("Repositories", repo_options)
+            repo = st.selectbox("Git Repositories", repo_options)
             st.markdown(repo_descriptions.get(repo, "Không có mô tả cho repo này."), unsafe_allow_html=True)
         if repo == 'Tất cả':
             df_repo = df[df['repo_name'].isin(valid_repos)].copy()
@@ -121,12 +120,14 @@ def show_home():
             "xAxis": {
                 "type": 'category',
                 "data": x_labels,
-                "splitArea": {"show": True}
+                "splitArea": {"show": True},
+                "axisTick": {"show": False},
             },
             "yAxis": {
                 "type": 'category',
                 "data": y_labels,
-                "splitArea": {"show": True}
+                "splitArea": {"show": True},
+                "axisTick": {"show": False},
             },
             "visualMap": {
                 "show": False,
@@ -149,8 +150,6 @@ def show_home():
         }
         with col_main:
             st_echarts(option, height=f"{chart_height}px")
-
-        st.markdown("---")
         # Kinh nghiệm làm việc
         with st.expander("💼 Kinh nghiệm làm việc", expanded=True):
             st.markdown("""
@@ -237,9 +236,9 @@ def show_home():
             """, unsafe_allow_html=True)
             st.markdown("""
             <div style='border:1px solid #eee; border-radius:8px; padding:16px; margin-bottom:16px;'>
-            <h4>Webapp cá nhân hóa</h4>
+            <h4>Trang Portfolio cá nhân hóa</h4>
             <ul>
-            <li><b>Mô tả:</b> Blog cá nhân deploy trên Server cá nhân, theo dõi kết quả công việc.</li>
+            <li><b>Mô tả:</b> Portfolio deploy trên Server cá nhân, theo dõi kết quả công việc.</li>
             <li><b>Công nghệ:</b> Python, Service, Ngrok</li>
             <li><b>Kết quả:</b> Lưu profile cá nhân và theo dõi các dashboard cá nhân (Github, số lượng DAG, ...).</li>
             </ul>

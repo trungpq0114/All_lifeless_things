@@ -35,7 +35,6 @@ def setup_page():
         st.error(e)
     if st.session_state['authentication_status']:
         authenticator.logout("Đăng xuất", "sidebar")
-        st.write(f'Welcome *{st.session_state["name"]}*')
     elif st.session_state['authentication_status'] is False:
         st.error('Username/password is incorrect')
     elif st.session_state['authentication_status'] is None:

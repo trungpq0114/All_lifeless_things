@@ -7,10 +7,10 @@ import importlib
 st.cache_resource.clear()
 
 page_dict = {
-    "Home": {"module": "menu_pages.home", "func": "show_home", "icon": "house"},
-    "Dashboard": {"module": "menu_pages.dashboard", "func": "show_dashboard", "icon": "bar-chart"},
-    "Settings": {"module": "menu_pages.settings", "func": "show_settings", "icon": "gear"},
-    "Account": {"module": "menu_pages.account", "func": "show_account", "icon": "person"},
+    "Home": {"module": "menu_pages.home", "func": "show_home", "icon": "house", "roles": ["admin", "user", "manager"]},
+    "Dashboard": {"module": "menu_pages.dashboard", "func": "show_dashboard", "icon": "bar-chart", "roles": ["admin", "manager"]},
+    "Settings": {"module": "menu_pages.settings", "func": "show_settings", "icon": "gear", "roles": ["admin"]},
+    "Account": {"module": "menu_pages.account", "func": "show_account", "icon": "person", "roles": ["admin", "user", "manager"]},
 }
 
 with st.sidebar:
@@ -34,6 +34,12 @@ else:
     from page_setup import setup_page
     authenticator = setup_page()
     if st.session_state.get('authentication_status'):
-        getattr(module, func_name)(authenticator)
+        # Kiểm tra role của user
+        user_role = st.session_state.get('roles', 'user')
+        allowed_roles = page_dict[selected].get("roles", ["admin", "user", "manager"])
+        if user_role in allowed_roles:
+            getattr(module, func_name)(authenticator)
+        else:
+            st.error(f"Bạn không có quyền truy cập trang này (role: {user_role})")
     else:
         st.error("Vui lòng đăng nhập để truy cập trang này")
