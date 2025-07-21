@@ -223,10 +223,10 @@ def show_home():
             fig.update_xaxes(tickfont_size=12, title_font_size=14)
             max_len = dag_median.index.str.len().max()
             st.markdown(f"""
-                <div style='margin-bottom:5px; margin-left: {max_len*8}px; margin-top:0;'>
+                <div style='margin-bottom:5px; margin-left: {max_len*7.8}px; margin-top:0;'>
                     <span style='font-size:26px; font-weight:700; color:#636EFA;'>Trung vị <b>thời gian chạy của DAG</b></span>
                 </div>
-                <div style='margin-bottom:0px; margin-left: {max_len*8}px; margin-top:-8px;'>
+                <div style='margin-bottom:0px; margin-left: {max_len*7.8}px; margin-top:-8px;'>
                     <span style='font-size:16px; color:#ffffff;'>trên Airflow trong 7 ngày qua. (phút)</span>
                 </div>
             """, unsafe_allow_html=True)
@@ -244,3 +244,17 @@ def show_home():
             </ul>
             </div>
             """, unsafe_allow_html=True)
+        
+                # Album ảnh cá nhân
+        with st.expander("🖼️ Album nếu đăng nhập này", expanded=False):
+            album_images = [
+                "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+                "https://images.unsplash.com/photo-1465101046530-73398c7f28ca",
+                "https://images.unsplash.com/photo-1519125323398-675f0ddb6308",
+                "https://ix-marketing.imgix.net/autotagging.png",
+                # Thêm link ảnh khác nếu muốn
+            ]
+            cols_album = st.columns(4)
+            for idx, img_url in enumerate(album_images):
+                with cols_album[idx % 4]:
+                    st.image(img_url)

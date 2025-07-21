@@ -12,7 +12,7 @@ def show_dashboard(authenticator):
         st.warning("Bạn chưa đăng nhập.")
         return
 
-    st.title("Dashboard Airflow - Gần nhất")
+    st.title("Dashboard Airflow")
 
     # --- Date filter setup ---
     import datetime

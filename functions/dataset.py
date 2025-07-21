@@ -54,7 +54,7 @@ def get_airflow_dagrun():
         database=st.secrets["database_airflow"]["database"]
     )
     query = """
-        SELECT dag_id, TIMESTAMPDIFF(SECOND, start_date, end_date) AS duration
+        SELECT concat('D',left(MD5(dag_id), 3), SUBSTRING(dag_id, 4)) dag_id, TIMESTAMPDIFF(SECOND, start_date, end_date) AS duration
         FROM dag_run
         WHERE start_date IS NOT NULL AND end_date IS NOT NULL
             AND execution_date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
