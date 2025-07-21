@@ -29,16 +29,33 @@ def setup_page():
         config['cookie']['key'],
         config['cookie']['expiry_days']
     )
-    try:
-        authenticator.login()
-    except Exception as e:
-        st.error(e)
-    if st.session_state['authentication_status']:
+    auth_status = st.session_state.get('authentication_status', None)
+    if auth_status:
         authenticator.logout("Đăng xuất", "sidebar")
-    elif st.session_state['authentication_status'] is False:
-        st.error('Username/password is incorrect')
-    elif st.session_state['authentication_status'] is None:
-        st.warning('Please enter your username and password')
+    else:
+        tabs = st.tabs(["Đăng nhập", "Đăng ký"])
+        with tabs[0]:
+            try:
+                authenticator.login()
+            except Exception as e:
+                st.error(e)
+            auth_status = st.session_state.get('authentication_status', None)
+            if auth_status is False:
+                st.error('Username/password is incorrect')
+            elif auth_status is None:
+                st.warning('Please enter your username and password')
+        # Tab 2: Đăng ký tài khoản
+        with tabs[1]:
+            try:
+                (email_of_registered_user,
+                    username_of_registered_user,
+                    name_of_registered_user) = authenticator.register_user()
+                if email_of_registered_user:
+                    st.success('User registered successfully')
+                    with open(path + '/.secret/config.yaml', 'w', encoding='utf-8') as file:
+                        yaml.dump(config, file, default_flow_style=False, allow_unicode=True)
+            except stauth.RegisterError as e:
+                st.error(e)
     return authenticator
 
 def get_date_info():

@@ -41,5 +41,3 @@ else:
             getattr(module, func_name)(authenticator)
         else:
             st.error(f"Bạn không có quyền truy cập trang này (role: {user_role})")
-    else:
-        st.error("Vui lòng đăng nhập để truy cập trang này")
