@@ -34,7 +34,8 @@ def get_airflow_stats():
             COUNT(DISTINCT dag_id) AS num_dags,
             COUNT(*) AS num_runs,
             SUM(state='failed') AS num_failed,
-            AVG(TIMESTAMPDIFF(SECOND, start_date, end_date)) AS avg_duration
+            AVG(TIMESTAMPDIFF(SECOND, start_date, end_date)) AS avg_duration,
+            COUNT(CASE WHEN state='running' THEN 1 END) AS num_running
         FROM dag_run
         WHERE execution_date >= '{seven_days_ago}'
     """

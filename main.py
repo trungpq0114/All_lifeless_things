@@ -8,9 +8,11 @@ st.cache_resource.clear()
 
 page_dict = {
     "Home": {"module": "menu_pages.home", "func": "show_home", "icon": "house", "roles": ["admin", "user", "manager"]},
+    "Flashcard": {"module": "menu_pages.flashcard", "func": "show_flashcard", "icon": "bookmark", "roles": ["admin", "user", "manager"]},
     "Dashboard": {"module": "menu_pages.dashboard", "func": "show_dashboard", "icon": "bar-chart", "roles": ["admin", "manager"]},
     "Settings": {"module": "menu_pages.settings", "func": "show_settings", "icon": "gear", "roles": ["admin"]},
     "Account": {"module": "menu_pages.account", "func": "show_account", "icon": "person", "roles": ["admin", "user", "manager"]},
+    "Test": {"module": "menu_pages.test", "func": "show_test", "icon": "check-square", "roles": ["admin", "user", "manager"]},
 }
 
 with st.sidebar:
@@ -26,8 +28,8 @@ module_name = page_dict[selected]["module"]
 func_name = page_dict[selected]["func"]
 module = importlib.import_module(module_name)
 
-if selected == "Home":
-    # Trang Home không cần xác thực
+if selected in ["Home", "Flashcard"]:
+    # Trang Home và Flashcard không cần xác thực
     getattr(module, func_name)()
 else:
     # Các trang khác cần xác thực

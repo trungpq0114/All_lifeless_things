@@ -12,8 +12,6 @@ def show_dashboard(authenticator):
         st.warning("Bạn chưa đăng nhập.")
         return
 
-    st.title("Dashboard Airflow")
-
     # --- Date filter setup ---
     import datetime
     now = datetime.datetime.now()
@@ -37,7 +35,24 @@ def show_dashboard(authenticator):
         end_date = end_date[0]
     interval_date = (end_date - start_date).days
     # Hiển thị mô tả dữ liệu trong khoảng ngày đã chọn
-    st.info(f"Dữ liệu trong {abs(interval_date)+1} ngày từ {start_date.strftime('%d/%m/%Y')} đến {end_date.strftime('%d/%m/%Y')}")
+    # Title section
+    st.markdown(
+        f"""
+        <div style="background: #f1f5f9; border-radius: 8px; padding: 10px 24px; border-left: 5px solid #3b82f6; margin-bottom: 10px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <h5 style="margin: 0; font-size: 2.2rem; font-weight: 700; color: #2563eb; letter-spacing: 1px;">
+                    Dashboard Airflow
+                </h5>
+                <div style="font-size: 1.1rem; color: #222; font-weight: 500;">
+                    <b>{abs(interval_date)+1} ngày</b>
+                    từ <span style="color:#2563eb">{start_date.strftime('%d/%m/%Y')}</span>
+                    đến <span style="color:#2563eb">{end_date.strftime('%d/%m/%Y')}</span>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     # --- Database connection ---
     db_conf = st.secrets["database_airflow"]
@@ -71,13 +86,15 @@ def show_dashboard(authenticator):
     total_runs = len(df)
     num_success = (df['state'] == 'success').sum()
     num_failed = (df['state'] == 'failed').sum()
+    num_running = (df['state'] == 'running').sum()
     avg_duration = round(df['duration'].mean()/60, 2) if not df.empty else 0
 
-    c1, c2, c3, c4 = st.columns(4)
+    c1, c2, c3, c4, c5 = st.columns(5)
     c1.metric("Tổng DAG run", total_runs)
     c2.metric("Thành công", num_success)
     c3.metric("Thất bại", num_failed)
-    c4.metric("Thời gian chạy TB (phút)", avg_duration)
+    c4.metric("Đang chạy", num_running)
+    c5.metric("Thời gian chạy TB (phút)", avg_duration)
 
 
     # --- Aggregated summary by dag_id ---
@@ -114,6 +131,8 @@ def show_dashboard(authenticator):
                 return 1
             elif s == 'failed':
                 return 0
+            elif s == 'running':
+                return 0.5
             else:
                 return None
         summary['last_state_num'] = last_state.apply(state_to_num)
