@@ -18,4 +18,3 @@ Dự án giúp lưu trữ, trình bày profile cá nhân, theo dõi kết quả 
 
 Link: https://externally-one-chow.ngrok-free.app/
 
-sudo systemctl restart streamlit_webapp.service 
