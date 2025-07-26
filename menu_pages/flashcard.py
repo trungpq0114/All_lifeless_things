@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from streamlit_echarts import st_echarts
 from functions.dataset import get_commit_activity, get_airflow_stats, get_airflow_dagrun
 import mysql.connector
-from streamlit_shortcuts import shortcut_button, add_shortcuts
+from streamlit_shortcuts import shortcut_button, add_shortcuts, clear_shortcuts
 import random
 
 # -------------------- HELPER --------------------
@@ -19,11 +19,28 @@ def _reset_per_card_state(ss, flashcard_modes):
     ss.current_card_id = None
     ss.auto_next = False
     ss.clear_input_flag = True   # dọn input cho mode Nhập từ
-
-def render_flashcard(card, examples_html, audio_btn, show_definition=False):
+def render_flashcard(
+    card,
+    examples_html,
+    audio_btn,
+    show_definition=False,
+    show_term=True  # True: hiện sẵn; False: ẩn (blur) sẵn
+):
     """
     A reusable function to render the flashcard HTML structure for both 'Nhớ nghĩa' and 'Chọn nghĩa'.
+
+    Tham số:
+      - show_term: True để hiển thị từ vựng ngay khi tải; False để ẩn (blur) ban đầu.
+      - show_definition: True/False để hiện/ẩn nghĩa.
     """
+    import uuid
+    term_id = f"term-{uuid.uuid4().hex[:8]}"
+    term_text = card.get('term') or ''
+
+    # Blur nếu cần
+    term_cls = "term" + ("" if show_term else " masked")
+    toggle_label = "Ẩn từ" if show_term else "Hiện từ"
+
     card_html = f"""
     <style>
     .flashcard-center {{
@@ -32,8 +49,7 @@ def render_flashcard(card, examples_html, audio_btn, show_definition=False):
       align-items: center;
       width: 100%;
       min-height: 340px;
-      margin-top: 24px;
-      margin-bottom: 24px;
+      margin: 24px 0;
     }}
     .flashcard {{
       background: var(--fc-bg, #fff);
@@ -57,6 +73,16 @@ def render_flashcard(card, examples_html, audio_btn, show_definition=False):
     .section-title {{ font-weight:700;margin-top:16px; }}
     ul {{ margin:0 0 0 20px;padding:0; }}
     .flashcard-image {{ width:180px;height:120px;border-radius:4px;object-fit:cover; }}
+
+    /* Nút bật/tắt ẩn/hiện từ */
+    .toggle-btn {{
+      margin-left: 8px; padding: 2px 8px; font-size: 12px;
+      border: 1px solid var(--fc-border, #e5e7eb); border-radius: 6px;
+      background: transparent; cursor: pointer;
+    }}
+    /* Chế độ blur khi ẩn */
+    .masked {{ filter: blur(10px); transition: filter .15s ease; }}
+
     @media (prefers-color-scheme: dark) {{
       .flashcard {{
         --fc-bg: #22272e;
@@ -64,30 +90,43 @@ def render_flashcard(card, examples_html, audio_btn, show_definition=False):
         --fc-border: #444c56;
       }}
       .flashcard-content, .term, .pos, .phonetic, .section-title {{ color: #f3f5f7 !important; }}
+      .toggle-btn {{ border-color: #444c56; }}
     }}
     </style>
+
     <div class='flashcard-center'>
       <div class='flashcard'>
         <div class='flashcard-content'>
           <div>
-            <span class='term'>{card['term']}</span>
-            <span class='pos'>({card['part_of_speech'] or ''})</span>
-            <span class='phonetic'>{card['phonetic'] or ''}</span>
+            <span id='{term_id}' class='{term_cls}'>{term_text}</span>
+            <span class='pos'>({card.get('part_of_speech') or ''})</span>
+            <span class='phonetic'>{card.get('phonetic') or ''}</span>
             {audio_btn}
+            <button class='toggle-btn' onclick="
+              var el=document.getElementById('{term_id}');
+              if(el.classList.contains('masked')){{el.classList.remove('masked');this.textContent='Ẩn từ';}}
+              else{{el.classList.add('masked');this.textContent='Hiện từ';}}
+            ">{toggle_label}</button>
           </div>
+
           <div class='section-title'>Định nghĩa:</div>
-          <div>{card['definition'] if show_definition else '<i style="color:gray">(Nhấn nút để Nhớ nghĩa)</i>'}</div>
+          <div>{card.get('definition') if show_definition else '<i style="color:gray">(Nhấn nút để Nhớ nghĩa)</i>'}</div>
+
           <div class='section-title'>Ví dụ:</div>
           {examples_html}
         </div>
-        {f"<img class='flashcard-image' src='{card['image_url']}' alt='Hình minh hoạ từ {card['term']}' />" if card['image_url'] else ''}
+
+        {f"<img class='flashcard-image' src='{card.get('image_url')}' alt='Hình minh hoạ từ {card.get('term')}' />" if card.get('image_url') else ''}
       </div>
     </div>
     """
     return card_html
+
+
+
 def show_flashcard():
     import time
-
+    
     ss = st.session_state
 
     # -------------------- PAGE & TITLE --------------------
@@ -106,7 +145,7 @@ def show_flashcard():
     selected_topic = st.pills("Chủ đề", topics, selection_mode='single')  # hiện tại chưa lọc DB theo topic
 
     # -------------------- INIT SESSION STATE --------------------
-    flashcard_modes = ["Nhớ nghĩa", "Chọn nghĩa", "Nhập từ"]
+    flashcard_modes = ["Nhớ nghĩa", "Chọn nghĩa", "Chọn từ", "Nhập từ"]
     ss.setdefault('selected_mode', random.choice(flashcard_modes))
     ss.setdefault('show_definition', False)
     ss.setdefault('mcq_selected', None)
@@ -170,10 +209,10 @@ def show_flashcard():
     ss.flashcard_idx = max(0, min(ss.flashcard_idx, len(ss.flashcard_order) - 1))
 
     # -------------------- NAVIGATION BUTTONS --------------------
-    col_left, col_prev, col_center, col_skip, col_next, col_right = st.columns([2, 2, 2, 2.6, 2, 1])
+    col_left, col_prev, col_center, col_skip, col_next, col_right = st.columns([1, 2, 2, 2, 2, 1])
 
     with col_prev:
-        if shortcut_button("⬅️ Trước", "arrowleft", False):
+        if st.button("⬅️ Trước", "prev_flashcard", use_container_width=True):
             if ss.flashcard_idx > 0:
                 ss.flashcard_idx -= 1
                 move_to_next_valid(direction=-1)
@@ -184,12 +223,12 @@ def show_flashcard():
             st.rerun()
 
     with col_center:
-        if shortcut_button("Đáp án 💡", "arrowup", False) and not ss.show_definition:
+        if st.button("Đáp án 💡", "show_answer", use_container_width=True) and not ss.show_definition:
             ss.show_definition = True
             st.rerun()
 
     with col_skip:
-        if shortcut_button("🚫 Không hiển thị lại", "ctrl+arrowdown", False):
+        if st.button("🚫 Không hiển thị lại", "skip_flashcard", use_container_width=True):
             current_id = ss.flashcard_order[ss.flashcard_idx]
             ss.skip_cards.add(int(current_id))
             # Chuyển sang thẻ tiếp theo
@@ -199,7 +238,7 @@ def show_flashcard():
             st.rerun()
 
     with col_next:
-        if shortcut_button("Tiếp ➡️", "arrowright", False) or ss.auto_next:
+        if st.button("Tiếp ➡️", "next_flashcard", use_container_width=True) or ss.auto_next:
             ss.auto_next = False
             ss.flashcard_idx += 1
             move_to_next_valid(direction=1)
@@ -240,7 +279,6 @@ def show_flashcard():
         ss.mcq_selected = None
         ss.mcq_is_correct = None
         ss.mcq_options = None
-        ss.mcq_correct = card['definition']
         ss.text_input_answer = None
         ss.show_definition = False
         ss.auto_next = False
@@ -251,7 +289,14 @@ def show_flashcard():
             opts = wrong_defs + [card['definition']]
             random.shuffle(opts)
             ss.mcq_options = opts
-
+            ss.mcq_correct = card['definition']
+        elif ss.selected_mode == "Chọn từ":
+            # Lấy 3 từ vựng khác nhau trong flashcard
+            wrong_terms = df[df['id'] != card_id]['term'].dropna().sample(n=3, replace=False).tolist()
+            opts = wrong_terms + [card['term']]
+            random.shuffle(opts)
+            ss.mcq_options = opts
+            ss.mcq_correct = card['term']
     # -------------------- RENDER BY MODE --------------------
     mode = ss.selected_mode
 
@@ -261,11 +306,11 @@ def show_flashcard():
             unsafe_allow_html=True
         )
 
-        col_ans = st.columns([1, 3, 1], gap="small")
+        col_ans = st.columns([1, 3, 1])
         with col_ans[1]:
             result_placeholder = st.empty()
-            r1c1, r1c2 = st.columns(2, gap="small")
-            r2c1, r2c2 = st.columns(2, gap="small")
+            r1c1, r1c2 = st.columns(2)
+            r2c1, r2c2 = st.columns(2)
             btn_cols = [r1c1, r1c2, r2c1, r2c2]
 
             hotkeys = ["1", "2", "3", "4"]  # phím tắt
@@ -273,10 +318,10 @@ def show_flashcard():
             for i, opt in enumerate(ss.mcq_options):
                 with btn_cols[i]:
                     if ss.mcq_selected is None:
-                        clicked = shortcut_button(
+                        clicked = st.button(
                             f"{hotkeys[i]}. {opt}",
-                            hotkeys[i],          # phím tắt
-                            False                # không phải primary (tuỳ bạn)
+                            f"answer_{hotkeys[i]}",
+                            use_container_width=True
                         )
                     else:
                         # Sau khi chọn rồi thì khóa lại (hiển thị nút thường disabled hoặc chỉ text)
@@ -288,44 +333,51 @@ def show_flashcard():
                     ss.mcq_is_correct = (opt == ss.mcq_correct)
                     if ss.mcq_is_correct:
                         result_placeholder.success("Chính xác! 🎉")
-                        time.sleep(1.5)
+                        time.sleep(2)
                         ss.auto_next = True
                     else:
                         result_placeholder.error(f"Chưa chính xác. Đáp án đúng là: {ss.mcq_correct}")
                         ss.auto_next = False
                     st.rerun()
 
-
     elif mode == "Nhập từ":
-        # Clear input BEFORE creating the widget
-        ti_key = f"text_input_{card_id}"
-        if ss.clear_input_flag:
-            ss.pop(ti_key, None)
-            ss.clear_input_flag = False
+        if ss.get("clear_answer", False):
+            ss.pop("answer", None)
+            ss.clear_answer = False       # reset cờ
 
-        card_no_term = card.copy()
-        card_no_term['term'] = '?' if not ss.show_definition else card['term']
         st.markdown(
-            render_flashcard(card_no_term, examples_html, audio_btn, show_definition=True),
+            render_flashcard(
+                card,
+                examples_html,
+                audio_btn,
+                show_definition=True,
+                show_term=ss.clear_input_flag
+            ),
             unsafe_allow_html=True
         )
 
-        col_ans = st.columns([1, 3, 1], gap="small")
+        # ---------- WIDGET NHẬP ĐÁP ÁN ----------
+        col_ans = st.columns([1, 3, 1])
         with col_ans[1]:
-            user_answer = st.text_input("Nhập từ tiếng Anh:", key=ti_key)
+            user_answer = st.text_input("Nhập từ tiếng Anh:", key="answer")
             result_placeholder = st.empty()
 
             if ss.show_definition:
                 st.info(f"Đáp án: {card['term']}")
 
+            # ---------- XỬ LÝ KHI NGƯỜI DÙNG NHẬP ----------
             if user_answer:
-                if user_answer.strip().lower() == card['term'].strip().lower():
+                if user_answer.strip().lower() == card["term"].strip().lower():
                     result_placeholder.success("Chính xác! 🎉")
-                    # set flag to clear and move next
-                    ss.clear_input_flag = True
+                    time.sleep(2)
+                    ss.clear_answer = True
+
+                    # Chuyển thẻ (nếu còn)
                     if ss.flashcard_idx < len(ss.flashcard_order) - 1:
                         ss.flashcard_idx += 1
                         move_to_next_valid(direction=1)
+
+                    # Reset các biến điều khiển khác
                     ss.selected_mode = random.choice(flashcard_modes)
                     ss.current_card_id = None
                     ss.show_definition = False
@@ -335,9 +387,62 @@ def show_flashcard():
                     result_placeholder.error("Chưa chính xác. Hãy thử lại!")
                     ss.text_input_answer = False
 
+    elif mode == "Chọn từ":
+        st.markdown(
+            render_flashcard(card, examples_html, audio_btn, show_definition=True, show_term=False),
+            unsafe_allow_html=True
+        )
+
+        col_ans = st.columns([1, 3, 1])
+        with col_ans[1]:
+            result_placeholder = st.empty()
+            r1c1, r1c2 = st.columns(2)
+            r2c1, r2c2 = st.columns(2)
+            btn_cols = [r1c1, r1c2, r2c1, r2c2]
+
+            hotkeys = ["1", "2", "3", "4"]  # phím tắt
+
+            for i, opt in enumerate(ss.mcq_options):
+                with btn_cols[i]:
+                    if ss.mcq_selected is None:
+                        clicked = st.button(
+                            f"{hotkeys[i]}. {opt}",
+                            f"answer_{hotkeys[i]}",
+                            use_container_width=True
+                        )
+                    else:
+                        # Sau khi chọn rồi thì khóa lại (hiển thị nút thường disabled hoặc chỉ text)
+                        clicked = False
+                        st.button(f"{hotkeys[i]}. {opt}", disabled=True, use_container_width=True)
+
+                if clicked and ss.mcq_selected is None:
+                    ss.mcq_selected = opt
+                    ss.mcq_is_correct = (opt == ss.mcq_correct)
+                    if ss.mcq_is_correct:
+                        result_placeholder.success("Chính xác! 🎉")
+                        time.sleep(2)
+                        ss.auto_next = True
+                    else:
+                        result_placeholder.error(f"Chưa chính xác. Đáp án đúng là: {ss.mcq_correct}")
+                        ss.auto_next = False
+                    st.rerun()
+
     else:  # "Nhớ nghĩa"
         st.markdown(
             render_flashcard(card, examples_html, audio_btn, show_definition=ss.show_definition),
             unsafe_allow_html=True
         )
 
+    clear_shortcuts() 
+    add_shortcuts(
+        prev_flashcard="arrowleft",
+        next_flashcard="arrowright",
+        show_answer="arrowup",
+        skip_flashcard="arrowdown",
+        answer_1 = "1",
+        answer_2 = "2",
+        answer_3 = "3",
+        answer_4 = "4",
+        answer="0",
+    )
+    
