@@ -108,14 +108,9 @@ def render_flashcard(
               else{{el.classList.add('masked');this.textContent='Hiện từ';}}
             ">{toggle_label}</button>
           </div>
-
           <div class='section-title'>Định nghĩa:</div>
           <div>{card.get('definition') if show_definition else '<i style="color:gray">(Nhấn nút để Nhớ nghĩa)</i>'}</div>
-
-          <div class='section-title'>Ví dụ:</div>
-          {examples_html}
-        </div>
-
+          <div class='section-title'>Ví dụ:</div>{examples_html}</div>
         {f"<img class='flashcard-image' src='{card.get('image_url')}' alt='Hình minh hoạ từ {card.get('term')}' />" if card.get('image_url') else ''}
       </div>
     </div>
@@ -308,18 +303,18 @@ def show_flashcard():
 
         col_ans = st.columns([1, 3, 1])
         with col_ans[1]:
-            result_placeholder = st.empty()
             r1c1, r1c2 = st.columns(2)
             r2c1, r2c2 = st.columns(2)
             btn_cols = [r1c1, r1c2, r2c1, r2c2]
-
+            result_placeholder = st.empty()
             hotkeys = ["1", "2", "3", "4"]  # phím tắt
+            icons  = ["①", "②", "③", "④"]
 
             for i, opt in enumerate(ss.mcq_options):
                 with btn_cols[i]:
                     if ss.mcq_selected is None:
                         clicked = st.button(
-                            f"{hotkeys[i]}. {opt}",
+                            f"{icons[i]}. {opt}",
                             f"answer_{hotkeys[i]}",
                             use_container_width=True
                         )
@@ -327,7 +322,7 @@ def show_flashcard():
                         # Sau khi chọn rồi thì khóa lại (hiển thị nút thường disabled hoặc chỉ text)
                         clicked = False
                         st.button(f"{hotkeys[i]}. {opt}", disabled=True, use_container_width=True)
-
+            
                 if clicked and ss.mcq_selected is None:
                     ss.mcq_selected = opt
                     ss.mcq_is_correct = (opt == ss.mcq_correct)
@@ -351,7 +346,7 @@ def show_flashcard():
                 examples_html,
                 audio_btn,
                 show_definition=True,
-                show_term=ss.clear_input_flag
+                show_term=not(ss.clear_input_flag)
             ),
             unsafe_allow_html=True
         )
@@ -435,10 +430,10 @@ def show_flashcard():
 
     clear_shortcuts() 
     add_shortcuts(
-        prev_flashcard="arrowleft",
-        next_flashcard="arrowright",
-        show_answer="arrowup",
-        skip_flashcard="arrowdown",
+        prev_flashcard="ctrl+arrowleft",
+        next_flashcard="ctrl+arrowright",
+        show_answer="ctrl+arrowup",
+        skip_flashcard="ctrl+arrowdown",
         answer_1 = "1",
         answer_2 = "2",
         answer_3 = "3",
