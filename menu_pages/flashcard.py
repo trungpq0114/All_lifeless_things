@@ -149,8 +149,10 @@ def show_flashcard():
     ss.setdefault('mcq_correct', None)
     ss.setdefault('current_card_id', None)
     ss.setdefault('auto_next', False)
-    ss.setdefault('skip_cards', set())         # chứa id các thẻ không hiển thị lại
-    ss.setdefault('clear_input_flag', False)   # flag xóa input ở mode Nhập từ
+    ss.setdefault('skip_cards', set())
+    ss.setdefault('clear_input_flag', False)
+    ss.setdefault('hotkeys', ["1", "2", "3", "4"])
+    ss.setdefault('icons', [":one:", ":two:", ":three:", ":four:"])
 
     # -------------------- DB CONNECTION --------------------
     conn = mysql.connector.connect(
@@ -307,21 +309,18 @@ def show_flashcard():
             r2c1, r2c2 = st.columns(2)
             btn_cols = [r1c1, r1c2, r2c1, r2c2]
             result_placeholder = st.empty()
-            hotkeys = ["1", "2", "3", "4"]  # phím tắt
-            icons  = ["①", "②", "③", "④"]
-
             for i, opt in enumerate(ss.mcq_options):
                 with btn_cols[i]:
                     if ss.mcq_selected is None:
                         clicked = st.button(
-                            f"{icons[i]}. {opt}",
-                            f"answer_{hotkeys[i]}",
+                            f"{ss.icons[i]} {opt}",
+                            f"answer_{ss.hotkeys[i]}",
                             use_container_width=True
                         )
                     else:
                         # Sau khi chọn rồi thì khóa lại (hiển thị nút thường disabled hoặc chỉ text)
                         clicked = False
-                        st.button(f"{hotkeys[i]}. {opt}", disabled=True, use_container_width=True)
+                        st.button(f"{ss.hotkeys[i]}. {opt}", disabled=True, use_container_width=True)
             
                 if clicked and ss.mcq_selected is None:
                     ss.mcq_selected = opt
@@ -334,6 +333,7 @@ def show_flashcard():
                         result_placeholder.error(f"Chưa chính xác. Đáp án đúng là: {ss.mcq_correct}")
                         ss.auto_next = False
                     st.rerun()
+                    
 
     elif mode == "Nhập từ":
         if ss.get("clear_answer", False):
@@ -394,21 +394,18 @@ def show_flashcard():
             r1c1, r1c2 = st.columns(2)
             r2c1, r2c2 = st.columns(2)
             btn_cols = [r1c1, r1c2, r2c1, r2c2]
-
-            hotkeys = ["1", "2", "3", "4"]  # phím tắt
-
             for i, opt in enumerate(ss.mcq_options):
                 with btn_cols[i]:
                     if ss.mcq_selected is None:
                         clicked = st.button(
-                            f"{hotkeys[i]}. {opt}",
-                            f"answer_{hotkeys[i]}",
+                            f"{ss.icons[i]} {opt}",
+                            f"answer_{ss.hotkeys[i]}",
                             use_container_width=True
                         )
                     else:
                         # Sau khi chọn rồi thì khóa lại (hiển thị nút thường disabled hoặc chỉ text)
                         clicked = False
-                        st.button(f"{hotkeys[i]}. {opt}", disabled=True, use_container_width=True)
+                        st.button(f"{ss.hotkeys[i]}. {opt}", disabled=True, use_container_width=True)
 
                 if clicked and ss.mcq_selected is None:
                     ss.mcq_selected = opt

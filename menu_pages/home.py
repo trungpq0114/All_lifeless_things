@@ -151,17 +151,23 @@ def show_home():
         with col_main:
             st_echarts(option, height=f"{chart_height}px")
         # Kinh nghiệm làm việc
+        today = get_date_info()['today']
+        import datetime
+        start = datetime.datetime(2022, 12, 1)
+        be_lead = datetime.datetime(2025, 2, 1)
+        total_months_lead = (today.year - be_lead.year) * 12 + today.month - be_lead.month
+        total_months_analyst = (today.year - start.year) * 12 + today.month - start.month
         with st.expander("💼 Kinh nghiệm làm việc", expanded=True):
-            st.markdown("""
+            st.markdown(f"""
             <div style='margin-bottom:16px;'>
             <b>Team Lead</b> <br>
             GHTK <br>
-            <span style='color:gray;'>Feb 2025 - Present · 6 tháng | Hà Nội</span>
+            <span style='color:gray;'>Feb 2025 - Present · {total_months_lead} tháng | Hà Nội</span>
             </div>
             <div style='margin-bottom:16px;'>
             <b>Data Analyst</b> <br>
             GHTK <br>
-            <span style='color:gray;'>Dec 2022 - Present · 2 năm 8 tháng | Hà Nội</span>
+            <span style='color:gray;'>Dec 2022 - Present · {total_months_analyst} tháng | Hà Nội</span>
             </div>
             <div style='margin-bottom:16px;'>
             <b>Business Analyst</b> <br>
