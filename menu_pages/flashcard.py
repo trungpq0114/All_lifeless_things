@@ -1,5 +1,4 @@
 import streamlit as st
-from page_setup import *
 import pandas as pd
 import plotly.graph_objects as go
 from streamlit_echarts import st_echarts
@@ -156,10 +155,11 @@ def show_flashcard():
 
     # -------------------- DB CONNECTION --------------------
     conn = mysql.connector.connect(
-        host=st.secrets["database_airflow"]["host"],
-        user=st.secrets["database_airflow"]["username"],
-        password=st.secrets["database_airflow"]["password"],
-        database=st.secrets["database_airflow"]["database"]
+        host=st.secrets["database_web_account"]["host"],
+        user=st.secrets["database_web_account"]["username"],
+        password=st.secrets["database_web_account"]["password"],
+        database=st.secrets["database_web_account"]["database"],
+        port=st.secrets["database_web_account"]["port"],
     )
 
     query = """

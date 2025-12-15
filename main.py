@@ -1,11 +1,11 @@
-from page_setup import *
+from page_setup import setup_page
 from streamlit_option_menu import option_menu
 import streamlit as st
 import importlib
 
 # Xóa cache nếu cần
 st.cache_resource.clear()
-
+config_conn = setup_page()
 page_dict = {
     "Home": {"module": "menu_pages.home", "func": "show_home", "icon": "house", "roles": ["admin", "user", "manager"]},
     "Flashcard": {"module": "menu_pages.flashcard", "func": "show_flashcard", "icon": "bookmark", "roles": ["admin", "user", "manager"]},

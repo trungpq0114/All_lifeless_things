@@ -1,5 +1,5 @@
 import streamlit as st
-from page_setup import *
+from functions.def_setup import get_date_info
 import pandas as pd
 import plotly.graph_objects as go
 from streamlit_echarts import st_echarts
@@ -22,7 +22,7 @@ def show_home():
                 <p>📍 Hà Nội, Việt Nam  <br>
                 📧 trungpq.0114@gmail.com  <br>
                 ☎️ 0123 456 789  <br>
-                <a href='https://www.linkedin.com/in/trungpham0114/'>LinkedIn</a> | <a href='https://github.com/trungpq0114'>GitHub</a></p>
+                <a href='https://www.linkedin.com/in/trungpham0114/'>LinkedIn</a> | <a href='https://github.com/trungpq0114'>GitHub</a> | <a href='https://leetcode.com/u/user6886wY/'>Leetcode</a></p>
                 """, unsafe_allow_html=True)
     with col_right:
         st.markdown("## 🛠️ Kỹ năng chính")

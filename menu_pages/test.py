@@ -1,5 +1,4 @@
 import streamlit as st
-from page_setup import *
 
 def show_test(authenticator):
     st.set_page_config(layout='wide')

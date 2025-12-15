@@ -1,6 +1,5 @@
 import streamlit as st
 import streamlit_authenticator as stauth
-from streamlit_authenticator.utilities import *
 
 def setup_page():
     import yaml

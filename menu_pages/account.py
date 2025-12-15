@@ -1,6 +1,5 @@
 import streamlit as st
 import streamlit_authenticator as stauth
-from page_setup import *
 
 def show_account(authenticator):
     st.set_page_config(page_title='Tài khoản', page_icon=':bar_chart:', layout='wide', initial_sidebar_state="expanded")

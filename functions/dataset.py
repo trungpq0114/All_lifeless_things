@@ -9,7 +9,8 @@ def get_commit_activity():
         host=st.secrets["database_web_account"]["host"],
         user=st.secrets["database_web_account"]["username"],
         password=st.secrets["database_web_account"]["password"],
-        database=st.secrets["database_web_account"]["database"]
+        database=st.secrets["database_web_account"]["database"],
+        port=st.secrets["database_web_account"]["port"],
     )
     one_year_ago = int((datetime.datetime.now() - datetime.timedelta(days=365)).timestamp())
     query = f"""
