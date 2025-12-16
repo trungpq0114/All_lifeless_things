@@ -14,7 +14,7 @@ All_lifeless_things là một dự án web cá nhân hóa, xây dựng bằng Py
 - Ngrok (deploy webapp trên server cá nhân)
 
 ## Mục đích
-Dự án giúp lưu trữ, trình bày profile cá nhân, theo dõi kết quả công việc, và chia sẻ các dự án nổi bật một cách chuyên nghiệp, trực quan.
+Dự án giúp lưu trữ, trình bày profile cá nhân, theo dõi kết quả công việc, và chia sẻ các dự án nổi bật một cách trực quan.
 
-Link: https://externally-one-chow.ngrok-free.app/
+Link demo: https://all_lifeless_things.trungpq.com/
 
