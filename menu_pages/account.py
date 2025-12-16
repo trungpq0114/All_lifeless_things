@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit_authenticator as stauth
 
 def show_account(authenticator):
+    path = st.secrets.env.path
     st.set_page_config(page_title='Tài khoản', page_icon=':bar_chart:', layout='wide', initial_sidebar_state="expanded")
     import yaml
     from yaml.loader import SafeLoader

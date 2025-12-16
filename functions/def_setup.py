@@ -89,3 +89,10 @@ def get_date_info():
     date_dic['firstday_of_lastmonth'] = firstday_of_lastmonth
     date_dic['last_month'] = last_month
     return date_dic
+
+def get_config_conn():
+    import json
+    path = st.secrets.env.path
+    with open(path + "/All_lifeless_things/config_web/config_conn.json") as file:
+        config_conn = json.load(file)
+    return config_conn

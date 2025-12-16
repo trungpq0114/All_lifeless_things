@@ -1,4 +1,5 @@
 import streamlit as st
+from functions.def_setup import get_date_info
 import pandas as pd
 import plotly.graph_objects as go
 from streamlit_echarts import st_echarts
